@@ -16,6 +16,8 @@ const bot = new TelegramBot(token, {
 if (token && url) {
     bot.openWebHook();
     bot.setWebHook(`${url}/bot${token}`)
+} else {
+    console.error('Token or URL not specified')
 }
 
 bot.on('message', msg => {

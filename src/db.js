@@ -19,11 +19,15 @@ module.exports = class LocalDatabase {
     }
 
     databaseInitialize() {
+        console.log("Database initializing...")
+
         this.states = getCollection('states')
         this.contacts = getCollection('contacts')
         this.requests = getCollection('requests')
 
         this.initialized = true
+        console.log("Database initialized!")
+
     }
 
     getCollection(collectionName) {

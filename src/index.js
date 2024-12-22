@@ -25,8 +25,13 @@ bot.setWebHook(`${url}/bot${token}`)
 const db = new LocalDatabase()
 
 bot.on('message', msg => {
-    const state = db.getChatState(msg.chat.id)
-    console.log(`Chat state: ${ state }`)
-    db.updateOrInsertChatState(msg.chat.id)
-    bot.sendMessage(msg.chat.id, `Reply to '${ msg.text }'`, { reply_to_message_id: msg.message_id})
+    try {
+        const state = db.getChatState(msg.chat.id)
+        console.log(`Chat state: ${ state }`)
+        db.updateOrInsertChatState(msg.chat.id)
+        bot.sendMessage(msg.chat.id, `Reply to '${ msg.text }'`, { reply_to_message_id: msg.message_id})
+    } catch (error) {
+        console.error(error)
+    }
+    
 })

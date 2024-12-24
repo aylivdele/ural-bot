@@ -1,4 +1,5 @@
 const Loki = require('lokijs')
+const { v4: uuidv4 } = require('uuid')
 
 class LocalDatabase {
 
@@ -82,6 +83,7 @@ class LocalDatabase {
             first_name,
             last_name,
             user_id,
+            email,
         }
     ) {
         this.checkInit()
@@ -90,10 +92,11 @@ class LocalDatabase {
         if (contact) {
             console.log(`Update contact for ${chat_id}`)
 
-            contact.phone_number = phone_number
-            contact.first_name = first_name
-            contact.last_name = last_name
-            contact.user_id = user_id
+            contact.phone_number = phone_number ?? contact.phone_number
+            contact.first_name = first_name ?? contact.first_name
+            contact.last_name = last_name ?? contact.last_name
+            contact.user_id = user_id ?? contact.user_id
+            contact.email = email ?? contact.email
 
             this.contacts.update(contact)
         } else {
@@ -103,14 +106,24 @@ class LocalDatabase {
                 first_name,
                 last_name,
                 user_id,
+                email,
             })
             console.log(`Insert contact for ${chat_id}: ${contact}`)
         }
     }
 
+    getContact(
+        chat_id
+    ) {
+        this.checkInit()
+        
+        return this.contacts.by('id', chat_id)
+    }
+
     updateRequest(
-        chat_id,
+        id,
         {
+            chat_id,
             description,
             status,
             operator,
@@ -118,18 +131,27 @@ class LocalDatabase {
     ) {
         this.checkInit()
 
-        let request = this.requests.by('id', chat_id)
-        if (request) {
+        if (id) {
             console.log(`Update request for ${chat_id}`)
 
+            let request = this.requests.by('id', id)
+
+            request.chat_id = chat_id ?? request.chat_id
             request.description = description ?? request.description,
             request.status = status ?? request.status,
             request.operator = operator ?? request.operator,
 
             this.requests.update(request)
         } else {
-            request = this.requests.insert({
-                id: chat_id,
+            do {
+                id = uuidv4()
+            } while (
+                this.requests.by('id', id)
+            )
+
+            let request = this.requests.insert({
+                id,
+                chat_id,
                 description,
                 status,
                 operator,

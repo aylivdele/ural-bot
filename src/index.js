@@ -70,7 +70,11 @@ const reply = (msg, state) => {
                 return 1
             }
         case 2:
-            if (validateEmail(msg.text)) {
+            const hasEmail = db.getContact(msg.chat.id)?.email;
+            if (validateEmail(msg.text) || hasEmail) {
+                if (!hasEmail) {
+                    updateContact(msg.chat.id, {email: msg.text})
+                }
                 bot.sendMessage(msg.chat.id, 
                     `Пожалуйста, оставьте описание вашей заявки.`,
                     {reply_markup: {
@@ -100,6 +104,9 @@ const reply = (msg, state) => {
             )
             db.updateRequest(msg.chat.id, {description: msg.text, status: 'NEW'})
             return 4
+        case 4:
+        default:
+            return 
 
     }
 }

@@ -62,7 +62,7 @@ class LocalDatabase {
         this.checkInit()
 
         let chatState = this.states.by('id', chat_id)
-        if (!chatState) {
+        if (chatState) {
             console.log(`Update state for ${chat_id}: ${chatState.state} => ${state}`)
             chatState.state = state
             this.states.update(chatState)

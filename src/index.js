@@ -28,7 +28,7 @@ bot.on('message', msg => {
     try {
         const state = db.getChatState(msg.chat.id)
         console.log(`Chat state: ${ state }`)
-        db.updateOrInsertChatState(msg.chat.id, 1)
+        db.updateOrInsertChatState(msg.chat.id, state + 1 ?? 1)
         bot.sendMessage(msg.chat.id, `Reply to '${ msg.text }'`, { reply_to_message_id: msg.message_id})
     } catch (error) {
         console.error(error)

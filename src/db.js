@@ -1,10 +1,10 @@
+const Loki = require('lokijs')
 
-
-module.exports = class LocalDatabase {
+class LocalDatabase {
 
     initialized = false
 
-    LocalDatabase() {
+    constructor() {
         const dbPath = process.env.DATABASE_PATH
 
         if (!dbPath) {
@@ -14,16 +14,17 @@ module.exports = class LocalDatabase {
             autoload: true,
             autoloadCallback : this.databaseInitialize,
             autosave: true, 
-            autosaveInterval: 4000
+            autosaveInterval: 4000,
+            adapter: new Loki.LokiFsAdapter(),
         })
     }
 
-    databaseInitialize() {
+    databaseInitialize = () => {
         console.log("Database initializing...")
 
-        this.states = getCollection('states')
-        this.contacts = getCollection('contacts')
-        this.requests = getCollection('requests')
+        this.states = this.getCollection('states')
+        this.contacts = this.getCollection('contacts')
+        this.requests = this.getCollection('requests')
 
         this.initialized = true
         console.log("Database initialized!")
@@ -74,3 +75,5 @@ module.exports = class LocalDatabase {
         }
     }
 }
+
+module.exports = LocalDatabase

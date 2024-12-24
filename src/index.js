@@ -1,5 +1,5 @@
-const TelegramBot = require('node-telegram-bot-api');
-const LocalDatabase = require('./db');
+const TelegramBot = require('node-telegram-bot-api')
+const LocalDatabase = require('./db')
 
 require('dotenv').config()
 

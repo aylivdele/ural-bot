@@ -7,4 +7,7 @@ require('dotenv').config()
 const db = new LocalDatabase();
 const token = process.env.API_TOKEN
 
-const bot = new TelegramBot(token)
+setTimeout(() => {
+    db.updateOrInsertChatState(123, 123)
+    console.log(db.getChatState(123))
+}, 1000)

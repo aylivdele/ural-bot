@@ -70,7 +70,7 @@ const reply = (msg, state) => {
                 return 1
             }
         case 2:
-            const hasEmail = db.getContact(msg.chat.id)?.email;
+            const hasEmail = !!db.getContact(msg.chat.id)?.email;
             if (validateEmail(msg.text) || hasEmail) {
                 if (!hasEmail) {
                     updateContact(msg.chat.id, {email: msg.text})
@@ -102,11 +102,11 @@ const reply = (msg, state) => {
                     remove_keyboard: true,
                 }}
             )
-            db.updateRequest(msg.chat.id, {description: msg.text, status: 'NEW'})
+            db.updateRequest({chat_id: msg.chat.id, description: msg.text, status: 'NEW'})
             return 4
         case 4:
         default:
-            return 
+            return reply(2)
 
     }
 }
@@ -115,11 +115,10 @@ bot.on('message', msg => {
     try {
         const state = db.getChatState(msg.chat.id)
         console.log(`Chat state: ${ state }`)
-        let newState = state
-        if (Number.isNaN(state)) {
-            newState = 0
+        if (state === undefined || state === null || Number.isNaN(state)) {
+            state = 0
         }
-        newState = reply(msg, state)
+        const newState = reply(msg, state)
         db.updateOrInsertChatState(msg.chat.id, newState)
     } catch (error) {
         console.error(error)

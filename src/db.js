@@ -120,6 +120,12 @@ class LocalDatabase {
         return this.contacts.by('id', chat_id)
     }
 
+    getRequestsByChatId(
+        chat_id,
+    ) {
+        return this.requests.where(r => r.chat_id === chat_id)
+    }
+
     updateRequest(
         id,
         {

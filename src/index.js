@@ -97,8 +97,35 @@ const reply = (msg, state) => {
                 }}
             ).then(() => 4, () => state)
         case 4:
+            const requests = db.getRequestsByChatId(msg.chat.id)
+            const countOfOpenRequests = requests.filter(r => r.status !== 'DONE').length
+            if (countOfOpenRequests > 0) {
+                if (countOfOpenRequests >= 3) {
+                    return bot.sendMessage(msg.chat.id, 
+                        'Вы достигли лимита открытых заявок! Пожалуйста, дождитесь их обработки.',
+                    ).then(() => 4, () => state) 
+                }
+                return bot.sendMessage(msg.chat.id, 
+                    'У вас уже есть заявка, хотите завести новую?',
+                    {reply_markup: {
+                        keyboard: [[{text: 'Да'}]]
+                    }}
+                ).then(() => 5, () => state)
+            }
+            
+            return bot.sendMessage(msg.chat.id, 
+                'Ваша заявка обработана, хотите завести новую?',
+                {reply_markup: {
+                    keyboard: [[{text: 'Да'}]]
+                }}
+            ).then(() => 5, () => state)
+
+        case 5:
+            if (msg.text?.toLowerCase() === 'да') {
+                return reply(msg, 2)
+            }
         default:
-            return reply(2)
+            return state
 
     }
 }

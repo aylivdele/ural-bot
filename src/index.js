@@ -149,17 +149,23 @@ const getAdminKeyboard = (isSuper) => {
 }
 
 const handleUserShared = (user_shared, from) => {
+    console.log(`Handle user shared ${ JSON.stringify(user_shared)}`)
     switch (user_shared.request_id) {
         case 1:
-            return 
+            db.addOperator({adderUsername: from, ...user_shared})
+            return 'Оператор добавлен'
         case 2:
-            return
+            db.removeOperator(user_shared.user_id)
+            return 'Оператор удален'
         case 3:
-            return db.addAdmin(user_shared.user_id, false, from)
+            db.addAdmin({isSuper: false, adderUsername: from, ...user_shared})
+            return 'Администратор добавлен'
         case 4:
-            return db.addAdmin(user_shared.user_id, true, from)
+            db.addAdmin({isSuper: true, adderUsername: from, ...user_shared})
+            return 'Администратор добавлен'
         case 5:
-            return db.removeAdmin(user_shared.user_id)
+            db.removeAdmin(user_shared.user_id)
+            return 'Администратор удален'
     }
 }
 
@@ -168,10 +174,11 @@ bot.on('message', msg => {
         const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
         console.log('Received msg: ' + JSON.stringify(msg))
         if (admin) {
-            if (msg.user_shared) {
-                handleUserShared(msg.user_shared, msg.from.username)
+            let customMessage = undefined
+            if (msg.users_shared?.length) {
+                customMessage = handleUserShared(msg.users_shared[0], msg.from.username)
             }
-            return bot.sendMessage(msg.chat.id, 'Меню администратора',
+            return bot.sendMessage(msg.chat.id, customMessage ?? 'Меню администратора',
                 {reply_markup: {
                     keyboard: getAdminKeyboard(admin.isSuper)
                 }}

@@ -177,27 +177,56 @@ class LocalDatabase {
     }
 
     addOperator({
-        id,
-
+        user_id,
+        first_name,
+        last_name,
+        username,
+        adderUsername,
     }) {
-        
+        let operator = this.operators.by('id', user_id)
+
+        console.log(`Add operator ${ username } by ${ adderUsername }`)
+        if (operator) {
+            return operator
+        }
+        return this.operators.insert({
+            id: user_id,
+            adder: adderUsername,
+            date: Date.now(),
+            first_name,
+            last_name,
+            username,
+        })
+    }
+
+    removeOperator(
+        id
+    ) {
+        return this.operators.findAndRemove({'id' : {'$eq' : id}})
     }
 
     addAdmin({
-        id,
+        user_id,
+        first_name,
+        last_name,
+        username,
         isSuper,
         adderUsername,
     }) {
-        let admin = this.admins.by('id', id)
+        let admin = this.admins.by('id', user_id)
 
+        console.log(`Add admin ${ username } by ${ adderUsername }`)
         if (admin) {
             return admin
         }
         return this.admins.insert({
-            id,
+            id: user_id,
             isSuper: isSuper ?? false,
             adder: adderUsername,
             date: Date.now(),
+            first_name,
+            last_name,
+            username,
         })
     }
 

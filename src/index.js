@@ -39,7 +39,7 @@ const reply = (msg, state) => {
     switch (state) {
         case 0:
             return bot.sendMessage(msg.chat.id, 
-                `Здравствуйте! Для того, чтобы оставить заявку нужно предоставить номер телефона и почту.`,
+                `Здравствуйте! Для того, чтобы оставить заявку, нужно предоставить номер телефона и почту.`,
                 {reply_markup: {
                     keyboard: [[{request_contact: true, text: 'Передать номер'}]],
                     is_persistent: true,
@@ -61,7 +61,7 @@ const reply = (msg, state) => {
                 ).then(() => 2, () => state)
             } else {
                 return bot.sendMessage(msg.chat.id, 
-                    `Для того, чтобы оставить заявку нужно предоставить номер телефона и почту.`,
+                    `Для того, чтобы оставить заявку, нужно предоставить номер телефона и почту.`,
                     {reply_markup: {keyboard: [[{request_contact: true, text: 'Передать номер'}]]}}
                 ).then(() => 1, () => 1)
             }
@@ -88,7 +88,7 @@ const reply = (msg, state) => {
                 ).then(() => 2, () => state)
             }
         case 3:
-            db.updateRequest({chat_id: msg.chat.id, description: msg.text, status: 'NEW'})
+            db.updateRequest(undefined, {chat_id: msg.chat.id, description: msg.text, status: 'NEW'})
 
             return bot.sendMessage(msg.chat.id, 
                 'Спасибо! С вами свяжется наш оператор!',

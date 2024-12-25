@@ -26,6 +26,8 @@ class LocalDatabase {
         this.states = this.getCollection('states')
         this.contacts = this.getCollection('contacts')
         this.requests = this.getCollection('requests')
+        this.admins = this.getCollection('admins')
+        this.operators = this.getCollection('operators')
 
         this.initialized = true
         console.log("Database initialized!")
@@ -164,6 +166,45 @@ class LocalDatabase {
             })
             console.log(`Insert request for ${chat_id}: ${request}`)
         }
+    }
+
+    getAdmins() {
+        return this.admins.where(() => true)
+    }
+
+    getOperators() {
+        return this.operators.where(() => true)
+    }
+
+    addOperator({
+        id,
+
+    }) {
+        
+    }
+
+    addAdmin({
+        id,
+        isSuper,
+        adderUsername,
+    }) {
+        let admin = this.admins.by('id', id)
+
+        if (admin) {
+            return admin
+        }
+        return this.admins.insert({
+            id,
+            isSuper: isSuper ?? false,
+            adder: adderUsername,
+            date: Date.now(),
+        })
+    }
+
+    removeAdmin(
+        id,
+    ) {
+        return this.admins.findAndRemove({'id' : {'$eq' : id}})
     }
 }
 

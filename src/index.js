@@ -124,15 +124,65 @@ const reply = (msg, state) => {
             if (msg.text?.toLowerCase() === 'да') {
                 return reply(msg, 2)
             }
-            return Promise.resolve(4)
+            return reply(msg, 4)
         default:
             return Promise.resolve(state)
 
     }
 }
 
+const getAdminKeyboard = (isSuper) => {
+    const keyboard = [
+        [
+            {text: '+ оператор', request_user: {request_id: 1, user_is_bot: false}},
+            {text: '- оператор', request_user: {request_id: 2, user_is_bot: false}}
+        ]
+    ]
+    if (isSuper) {
+        keyboard.push([
+            {text: '+ админ', request_user: {request_id: 3, user_is_bot: false}},
+            {text: '+ супер админ', request_user: {request_id: 4, user_is_bot: false}},
+            {text: '- админ', request_user: {request_id: 5, user_is_bot: false}}
+        ])
+    }
+    return keyboard
+}
+
+const handleUserShared = (user_shared, from) => {
+    switch (user_shared.request_id) {
+        case 1:
+            return 
+        case 2:
+            return
+        case 3:
+            return db.addAdmin(user_shared.user_id, false, from)
+        case 4:
+            return db.addAdmin(user_shared.user_id, true, from)
+        case 5:
+            return db.removeAdmin(user_shared.user_id)
+    }
+}
+
 bot.on('message', msg => {
     try {
+        if (msg.text === 'Я супер админ') {
+            return db.addAdmin({id: msg.from.id, isSuper: true, adder: msg.from.id})
+        }
+        const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
+        if (admin) {
+            if (msg.user_shared) {
+                handleUserShared(msg.user_shared, msg.from.username)
+            }
+            return bot.sendMessage(msg.chat.id, 'Меню администратора',
+                {reply_markup: {
+                    keyboard: getAdminKeyboard(admin.isSuper)
+                }}
+            )
+        }
+        const operators = db.getOperators()
+        if (operators.some(operator => operator.id === msg.from.id)) {
+            
+        }
         let state = db.getChatState(msg.chat.id)
         console.log(`Chat state: ${ state }`)
         if (state === undefined || state === null || Number.isNaN(state)) {

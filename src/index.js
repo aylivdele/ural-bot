@@ -74,7 +74,6 @@ const reply = (msg, state) => {
                 return bot.sendMessage(msg.chat.id, 
                     `Пожалуйста, оставьте описание вашей заявки.`,
                     {reply_markup: {
-                        remove_keyboard: true,
                         force_reply: true,
                         input_field_placeholder: 'Хочу купить автомобиль!'
                     }}

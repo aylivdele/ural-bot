@@ -113,7 +113,7 @@ const reply = (msg, state) => {
 
 bot.on('message', msg => {
     try {
-        const state = db.getChatState(msg.chat.id)
+        let state = db.getChatState(msg.chat.id)
         console.log(`Chat state: ${ state }`)
         if (state === undefined || state === null || Number.isNaN(state)) {
             state = 0

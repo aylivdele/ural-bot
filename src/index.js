@@ -41,7 +41,7 @@ const reply = (msg, state) => {
             bot.sendMessage(msg.chat.id, 
                 `Здравствуйте! Для того, чтобы оставить заявку нужно предоставить номер телефона и почту.`,
                 {reply_markup: {
-                    keyboard: [[{request_contact: true}]],
+                    keyboard: [[{request_contact: true, text: 'Передать номер'}]],
                     is_persistent: true,
                     one_time_keyboard: true,
                 }}

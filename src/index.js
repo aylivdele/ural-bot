@@ -38,36 +38,33 @@ const validateEmail = (email) => {
 const reply = (msg, state) => {
     switch (state) {
         case 0:
-            bot.sendMessage(msg.chat.id, 
+            return bot.sendMessage(msg.chat.id, 
                 `Здравствуйте! Для того, чтобы оставить заявку нужно предоставить номер телефона и почту.`,
                 {reply_markup: {
                     keyboard: [[{request_contact: true, text: 'Передать номер'}]],
                     is_persistent: true,
                     one_time_keyboard: true,
                 }}
-            )
-            return 1
+            ).then(() => 1, () => state)
         case 1:
             if (msg.contact) {
                 db.updateContact(
                     msg.chat.id,
                     msg.contact,
                 )
-                bot.sendMessage(msg.chat.id, 
+                return bot.sendMessage(msg.chat.id, 
                     'Теперь введите свою почту.',
                     {reply_markup: {
                         force_reply: true,
                         input_field_placeholder: "example@mail.ru",
                         remove_keyboard: true,
                     }}
-                )
-                return 2
+                ).then(() => 2, () => state)
             } else {
-                bot.sendMessage(msg.chat.id, 
+                return bot.sendMessage(msg.chat.id, 
                     `Для того, чтобы оставить заявку нужно предоставить номер телефона и почту.`,
-                    {reply_markup: {keyboard: [[{request_contact: true}]]}}
-                )
-                return 1
+                    {reply_markup: {keyboard: [[{request_contact: true, text: 'Передать номер'}]]}}
+                ).then(() => 1, () => 1)
             }
         case 2:
             const hasEmail = !!db.getContact(msg.chat.id)?.email;
@@ -75,35 +72,33 @@ const reply = (msg, state) => {
                 if (!hasEmail) {
                     updateContact(msg.chat.id, {email: msg.text})
                 }
-                bot.sendMessage(msg.chat.id, 
+                return bot.sendMessage(msg.chat.id, 
                     `Пожалуйста, оставьте описание вашей заявки.`,
                     {reply_markup: {
                         remove_keyboard: true,
                         force_reply: true,
                         input_field_placeholder: 'Хочу купить автомобиль!'
                     }}
-                )
-                return 3
+                ).then(() => 3, () => state)
             } else {
-                bot.sendMessage(msg.chat.id, 
+                return bot.sendMessage(msg.chat.id, 
                     'Пожалуйста, введите корректную почту.',
                     {reply_markup: {
                         force_reply: true,
                         input_field_placeholder: "example@mail.ru",
                         remove_keyboard: true,
                     }}
-                )
-                return 2
+                ).then(() => 2, () => state)
             }
         case 3:
-            bot.sendMessage(msg.chat.id, 
+            db.updateRequest({chat_id: msg.chat.id, description: msg.text, status: 'NEW'})
+
+            return bot.sendMessage(msg.chat.id, 
                 'Спасибо! С вами свяжется наш оператор!',
                 {reply_markup: {
                     remove_keyboard: true,
                 }}
-            )
-            db.updateRequest({chat_id: msg.chat.id, description: msg.text, status: 'NEW'})
-            return 4
+            ).then(() => 4, () => state)
         case 4:
         default:
             return reply(2)
@@ -118,8 +113,8 @@ bot.on('message', msg => {
         if (state === undefined || state === null || Number.isNaN(state)) {
             state = 0
         }
-        const newState = reply(msg, state)
-        db.updateOrInsertChatState(msg.chat.id, newState)
+        reply(msg, state)
+            .then(newState => db.updateOrInsertChatState(msg.chat.id, newState))
     } catch (error) {
         console.error(error)
     }

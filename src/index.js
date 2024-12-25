@@ -134,15 +134,15 @@ const reply = (msg, state) => {
 const getAdminKeyboard = (isSuper) => {
     const keyboard = [
         [
-            {text: '+ оператор', request_user: {request_id: 1, user_is_bot: false}},
-            {text: '- оператор', request_user: {request_id: 2, user_is_bot: false}}
+            {text: '+ оператор', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
+            {text: '- оператор', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
         ]
     ]
     if (isSuper) {
         keyboard.push([
-            {text: '+ админ', request_user: {request_id: 3, user_is_bot: false}},
-            {text: '+ супер админ', request_user: {request_id: 4, user_is_bot: false}},
-            {text: '- админ', request_user: {request_id: 5, user_is_bot: false}}
+            {text: '+ админ', request_user: {request_id: 3, user_is_bot: false, request_name: true, request_username: true}},
+            {text: '+ супер админ', request_user: {request_id: 4, user_is_bot: false, request_name: true, request_username: true}},
+            {text: '- админ', request_user: {request_id: 5, user_is_bot: false, request_name: true, request_username: true}}
         ])
     }
     return keyboard
@@ -165,10 +165,8 @@ const handleUserShared = (user_shared, from) => {
 
 bot.on('message', msg => {
     try {
-        if (msg.text === 'Я супер админ') {
-            return db.addAdmin({id: msg.from.id, isSuper: true, adder: msg.from.id})
-        }
         const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
+        console.log('Received msg: ' + JSON.stringify(msg))
         if (admin) {
             if (msg.user_shared) {
                 handleUserShared(msg.user_shared, msg.from.username)

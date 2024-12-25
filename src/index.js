@@ -148,9 +148,9 @@ const getAdminKeyboard = (isSuper) => {
     return keyboard
 }
 
-const handleUserShared = (user_shared, from) => {
+const handleUserShared = (request_id, user_shared, from) => {
     console.log(`Handle user shared ${ JSON.stringify(user_shared)}`)
-    switch (user_shared.request_id) {
+    switch (request_id) {
         case 1:
             db.addOperator({adderUsername: from, ...user_shared})
             return 'Оператор добавлен'
@@ -175,8 +175,8 @@ bot.on('message', msg => {
         console.log('Received msg: ' + JSON.stringify(msg))
         if (admin) {
             let customMessage = undefined
-            if (msg.users_shared?.length) {
-                customMessage = handleUserShared(msg.users_shared[0], msg.from.username)
+            if (msg.users_shared?.users?.length) {
+                customMessage = handleUserShared(msg.users_shared.request_id, msg.users_shared.users[0], msg.from.username)
             }
             return bot.sendMessage(msg.chat.id, customMessage ?? 'Меню администратора',
                 {reply_markup: {

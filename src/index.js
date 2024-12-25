@@ -124,8 +124,9 @@ const reply = (msg, state) => {
             if (msg.text?.toLowerCase() === 'да') {
                 return reply(msg, 2)
             }
+            return 4
         default:
-            return state
+            return Promise.resolve(state)
 
     }
 }

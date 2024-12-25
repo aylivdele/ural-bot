@@ -57,7 +57,6 @@ const reply = (msg, state) => {
                     {reply_markup: {
                         force_reply: true,
                         input_field_placeholder: "example@mail.ru",
-                        remove_keyboard: true,
                     }}
                 ).then(() => 2, () => state)
             } else {
@@ -70,7 +69,7 @@ const reply = (msg, state) => {
             const hasEmail = !!db.getContact(msg.chat.id)?.email;
             if (validateEmail(msg.text) || hasEmail) {
                 if (!hasEmail) {
-                    updateContact(msg.chat.id, {email: msg.text})
+                    db.updateContact(msg.chat.id, {email: msg.text})
                 }
                 return bot.sendMessage(msg.chat.id, 
                     `Пожалуйста, оставьте описание вашей заявки.`,
@@ -86,7 +85,6 @@ const reply = (msg, state) => {
                     {reply_markup: {
                         force_reply: true,
                         input_field_placeholder: "example@mail.ru",
-                        remove_keyboard: true,
                     }}
                 ).then(() => 2, () => state)
             }

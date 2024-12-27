@@ -174,10 +174,8 @@ const handleUserShared = (request_id, user_shared, from) => {
 }
 
 bot.on('message', msg => {
-    db.getAdmins().forEach(admin => bot.sendMessage(admin.username, 'Test'))
     try {
         const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
-        console.log('Received msg: ' + JSON.stringify(msg))
         if (admin) {
             let customMessage = undefined
             if (msg.users_shared?.users?.length) {

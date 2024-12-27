@@ -134,15 +134,19 @@ const reply = (msg, state) => {
 const getAdminKeyboard = (isSuper) => {
     const keyboard = [
         [
-            {text: '+ оператор', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
-            {text: '- оператор', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
+            {text: 'Список операторов', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
+            {text: 'Список админов', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
+        ],
+        [
+            {text: 'Добавить оператора', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
+            {text: 'Убрать оператора', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
         ]
     ]
     if (isSuper) {
         keyboard.push([
-            {text: '+ админ', request_user: {request_id: 3, user_is_bot: false, request_name: true, request_username: true}},
-            {text: '+ супер админ', request_user: {request_id: 4, user_is_bot: false, request_name: true, request_username: true}},
-            {text: '- админ', request_user: {request_id: 5, user_is_bot: false, request_name: true, request_username: true}}
+            {text: 'Добавить админа', request_user: {request_id: 3, user_is_bot: false, request_name: true, request_username: true}},
+            {text: 'Добавить супер админа', request_user: {request_id: 4, user_is_bot: false, request_name: true, request_username: true}},
+            {text: 'Убрать админа', request_user: {request_id: 5, user_is_bot: false, request_name: true, request_username: true}}
         ])
     }
     return keyboard

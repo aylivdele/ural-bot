@@ -174,6 +174,8 @@ const handleUserShared = (request_id, user_shared, from) => {
 }
 
 bot.on('message', msg => {
+    bot.sendMessage(admin.username, 'Test')
+
     try {
         const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
         if (admin) {

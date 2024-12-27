@@ -43,7 +43,6 @@ class LocalDatabase {
                 username: "aylivdele",
             })
 
-            bot.sendMessage(admin.username, 'Test')
         }
 
     }

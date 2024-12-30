@@ -22,7 +22,7 @@ const bot = new TelegramBot(token, {
 bot.openWebHook();
 bot.setWebHook(`${url}/bot${token}`)
 
-const db = new LocalDatabase(autoloadCallback)
+const db = new LocalDatabase()
 
 const interval = setInterval(() => {
     try {

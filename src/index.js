@@ -22,66 +22,69 @@ const bot = new TelegramBot(token, {
 bot.openWebHook();
 bot.setWebHook(`${url}/bot${token}`)
 
-const autoloadCallback = (db, error) => {
-    const interval = setInterval(() => {
-        let requests = db.getNewRequests()
-        console.log("New requests: " + requests?.toString?.())
-        if (!requests?.length) {
-            console.log("No new requests")
+const db = new LocalDatabase(autoloadCallback)
+
+const interval = setInterval(() => {
+    try {
+        db.checkInit()
+    } catch (error) {
+        console.log('Not initialized')
+    }
+    let requests = db.getNewRequests()
+    console.log("New requests: " + requests?.toString?.())
+    if (!requests?.length) {
+        console.log("No new requests")
+        return
+    }
+    
+    let operators = db.getOpenOperators()
+    console.log("Open operators: " + operators?.toString?.())
+    if (!operators?.length) {
+        operators = db.getSortedOperators()
+        console.log("Sorted operators: " + operators?.toString?.())
+        if (!operators?.length) {
+            console.log("No registered operators")
             return
         }
-        
-        let operators = db.getOpenOperators()
-        console.log("Open operators: " + operators?.toString?.())
-        if (!operators?.length) {
-            operators = db.getSortedOperators()
-            console.log("Sorted operators: " + operators?.toString?.())
-            if (!operators?.length) {
-                console.log("No registered operators")
-                return
-            }
-        }
+    }
 
-        for (let i = 0; i < requests.length && i < operators.length; i++) {
-            const request = requests[i]
-            const operator = operators[i]
-            const contact = db.getContact(request.chat_id)
-            if (!contact) {
-                console.error(`Contact for request ${request.id} : ${ request.chat_id } not found`)
-                return
+    for (let i = 0; i < requests.length && i < operators.length; i++) {
+        const request = requests[i]
+        const operator = operators[i]
+        const contact = db.getContact(request.chat_id)
+        if (!contact) {
+            console.error(`Contact for request ${request.id} : ${ request.chat_id } not found`)
+            return
+        }
+        console.log(`Send request '${request.id}' to operator '${operator.username}'`)
+        db.updateRequest(request.id, {...request, status: 'IN WORK', operator: operator.id})
+        db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
+        const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name} ${contact.first_name}\n${ contact.phone_number }\n${contact.email}\n${contact.username}`
+        const entities = [
+            {
+                type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number,
+            }, {
+                type: 'email', offset: message.indexOf(contact.email), length: contact.email,
             }
-            console.log(`Send request '${request.id}' to operator '${operator.username}'`)
-            db.updateRequest(request.id, {...request, status: 'IN WORK', operator: operator.id})
-            db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
-            const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name} ${contact.first_name}\n${ contact.phone_number }\n${contact.email}\n${contact.username}`
-            const entities = [
-                {
-                    type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number,
-                }, {
-                    type: 'email', offset: message.indexOf(contact.email), length: contact.email,
-                }
-            ]
-            if (contact.username?.length) {
-                entities.push({
-                    type: 'mention', offset: message.indexOf(contact.username), length: contact.username,
-                })
-            }
-            bot.sendMessage(operator.chat_id, message, { entities: entities, reply_markup: {
-                inline_keyboard: [[
-                    {
-                        text: 'Закрыть заявку', callback_data: 'closeREQUEST' + request.id,
-                    }
-                ]]
-            }}).catch(reason => {
-                console.error(`Send message error`, reason)
-                db.rollbackRequest(request.id)
-                db.updateOperatorCount(operator.id, (operator.count ?? 1) - 1)
+        ]
+        if (contact.username?.length) {
+            entities.push({
+                type: 'mention', offset: message.indexOf(contact.username), length: contact.username,
             })
         }
-    }, 20000)
-}
-
-const db = new LocalDatabase(autoloadCallback)
+        bot.sendMessage(operator.chat_id, message, { entities: entities, reply_markup: {
+            inline_keyboard: [[
+                {
+                    text: 'Закрыть заявку', callback_data: 'closeREQUEST' + request.id,
+                }
+            ]]
+        }}).catch(reason => {
+            console.error(`Send message error`, reason)
+            db.rollbackRequest(request.id)
+            db.updateOperatorCount(operator.id, (operator.count ?? 1) - 1)
+        })
+    }
+}, 20000)
 
 bot.on('callback_query', query => {
     console.log(`Callback query: ${ query.toString() }`)

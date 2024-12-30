@@ -5,7 +5,7 @@ class LocalDatabase {
 
     initialized = false
 
-    constructor(autoloadCallback) {
+    constructor() {
         const dbPath = process.env.DATABASE_PATH
 
         if (!dbPath) {
@@ -13,10 +13,7 @@ class LocalDatabase {
         }
         this.db = new Loki(dbPath, {
             autoload: true,
-            autoloadCallback : (error) => {
-                this.databaseInitialize(error)
-                autoloadCallback?.(this.db, error)
-            },
+            autoloadCallback : this.databaseInitialize,
             autosave: true, 
             autosaveInterval: 4000,
             adapter: new Loki.LokiFsAdapter(),

@@ -81,7 +81,7 @@ const autoloadCallback = (db, error) => {
     }, 20000)
 }
 
-const db = new LocalDatabase()
+const db = new LocalDatabase(autoloadCallback)
 
 bot.on('callback_query', query => {
     console.log(`Callback query: ${ query.toString() }`)

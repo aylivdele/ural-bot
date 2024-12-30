@@ -148,7 +148,7 @@ class LocalDatabase {
     }
 
     getNewRequests() {
-        this.requests.where(r => r.status === 'NEW')
+        return this.requests.where(r => r.status === 'NEW')
     }
 
     onlyUniqueOperators(operator, index, operators) {

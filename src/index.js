@@ -22,7 +22,88 @@ const bot = new TelegramBot(token, {
 bot.openWebHook();
 bot.setWebHook(`${url}/bot${token}`)
 
+const autoloadCallback = (db, error) => {
+    const interval = setInterval(() => {
+        let requests = db.getNewRequests()
+        console.log("New requests: " + requests?.toString?.())
+        if (!requests?.length) {
+            console.log("No new requests")
+            return
+        }
+        
+        let operators = db.getOpenOperators()
+        console.log("Open operators: " + operators?.toString?.())
+        if (!operators?.length) {
+            operators = db.getSortedOperators()
+            console.log("Sorted operators: " + operators?.toString?.())
+            if (!operators?.length) {
+                console.log("No registered operators")
+                return
+            }
+        }
+
+        for (let i = 0; i < requests.length && i < operators.length; i++) {
+            const request = requests[i]
+            const operator = operators[i]
+            const contact = db.getContact(request.chat_id)
+            if (!contact) {
+                console.error(`Contact for request ${request.id} : ${ request.chat_id } not found`)
+                return
+            }
+            console.log(`Send request '${request.id}' to operator '${operator.username}'`)
+            db.updateRequest(request.id, {...request, status: 'IN WORK', operator: operator.id})
+            db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
+            const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name} ${contact.first_name}\n${ contact.phone_number }\n${contact.email}\n${contact.username}`
+            const entities = [
+                {
+                    type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number,
+                }, {
+                    type: 'email', offset: message.indexOf(contact.email), length: contact.email,
+                }
+            ]
+            if (contact.username?.length) {
+                entities.push({
+                    type: 'mention', offset: message.indexOf(contact.username), length: contact.username,
+                })
+            }
+            bot.sendMessage(operator.chat_id, message, { entities: entities, reply_markup: {
+                inline_keyboard: [[
+                    {
+                        text: 'Закрыть заявку', callback_data: 'closeREQUEST' + request.id,
+                    }
+                ]]
+            }}).catch(reason => {
+                console.error(`Send message error`, reason)
+                db.rollbackRequest(request.id)
+                db.updateOperatorCount(operator.id, (operator.count ?? 1) - 1)
+            })
+        }
+    }, 20000)
+}
+
 const db = new LocalDatabase()
+
+bot.on('callback_query', query => {
+    console.log(`Callback query: ${ query.toString() }`)
+    if (!query.data) {
+        return
+    }
+    const [command, request_id] = query.data.split('REQUEST')
+    switch (command) {
+        case 'close':
+            try {
+                db.updateRequest(request_id, {
+                    status: 'CLOSED',
+                })
+            } catch (e) {
+                console.error(e)
+                bot.answerCallbackQuery(query.id, {text: 'Ошибка при закрытии запроса!'})
+                return
+            }
+            bot.answerCallbackQuery(query.id, {text: 'Запрос успешно закрыт!'})
+            return
+    }
+})
 
 const validateEmail = (email) => {
     if (!email) {
@@ -179,6 +260,9 @@ bot.on('message', msg => {
     try {
         const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
         if (admin) {
+            if (!admin.chat_id) {
+                db.updateAdminChat(msg.from.id, msg.chat.id)
+            }
             bot.sendMessage(admin.username, 'Test')
 
             let customMessage = undefined
@@ -191,10 +275,16 @@ bot.on('message', msg => {
                 }}
             )
         }
-        const operators = db.getOperators()
-        if (operators.some(operator => operator.id === msg.from.id)) {
-            
+
+        const operator = db.getOperators().find(operator => operator.id === msg.from.id)
+        if (operator) {
+            if (!operator.chat_id) {
+                db.updateOperatorChat(msg.from.id, msg.chat.id)
+            }
+
+            return bot.sendMessage(msg.chat.id, 'Ожидайте новых заявок. При появлении они автоматически распределяются между операторами.')
         }
+
         let state = db.getChatState(msg.chat.id)
         console.log(`Chat state: ${ state }`)
         if (state === undefined || state === null || Number.isNaN(state)) {

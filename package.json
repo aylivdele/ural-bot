@@ -18,9 +18,9 @@
   "homepage": "https://github.com/aylivdele/ural-bot#readme",
   "description": "",
   "dependencies": {
-    "dotenv": "^16.4.7",
-    "lokijs": "^1.5.12",
-    "node-telegram-bot-api": "^0.66.0",
-    "uuid": "^11.0.3"
+    "dotenv": "16.4.7",
+    "lokijs": "1.5.12",
+    "node-telegram-bot-api": "0.66.0",
+    "uuid": "11.0.3"
   }
 }

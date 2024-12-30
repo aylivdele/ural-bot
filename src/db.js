@@ -5,7 +5,7 @@ class LocalDatabase {
 
     initialized = false
 
-    constructor() {
+    constructor(autoloadCallback) {
         const dbPath = process.env.DATABASE_PATH
 
         if (!dbPath) {
@@ -13,16 +13,23 @@ class LocalDatabase {
         }
         this.db = new Loki(dbPath, {
             autoload: true,
-            autoloadCallback : this.databaseInitialize,
+            autoloadCallback : (error) => {
+                this.databaseInitialize(error)
+                autoloadCallback?.(this.db, error)
+            },
             autosave: true, 
             autosaveInterval: 4000,
             adapter: new Loki.LokiFsAdapter(),
         })
     }
 
-    databaseInitialize = () => {
+    databaseInitialize = (error) => {
+        if (error) {
+            console.error("Database autoload error", error)
+        }
         console.log("Database initializing...")
 
+        
         this.states = this.getCollection('states')
         this.contacts = this.getCollection('contacts')
         this.requests = this.getCollection('requests')
@@ -98,6 +105,7 @@ class LocalDatabase {
             first_name,
             last_name,
             user_id,
+            username,
             email,
         }
     ) {
@@ -112,6 +120,7 @@ class LocalDatabase {
             contact.last_name = last_name ?? contact.last_name
             contact.user_id = user_id ?? contact.user_id
             contact.email = email ?? contact.email
+            contact.username = username ?? contact.username
 
             this.contacts.update(contact)
         } else {
@@ -141,6 +150,32 @@ class LocalDatabase {
         return this.requests.where(r => r.chat_id === chat_id)
     }
 
+    getNewRequests() {
+        this.requests.where(r => r.status === 'NEW')
+    }
+
+    onlyUniqueOperators(operator, index, operators) {
+        for (let i = 0; i < operators.length; i++) {
+            if (operators[i].id === operator.id) {
+                return i === index
+            }
+        }
+        return false
+    }
+
+    sortOperators = (a,b) => {
+        return (a.count ?? 0) - (b.count ?? 0)
+    }
+
+    getOpenOperators() {
+        const busyOperators = this.requests.where(r => r.status === 'IN WORK').map(r => r.operator).filter(this.onlyUniqueOperators)
+        return this.operators.where(operator => !busyOperators.includes(operator)).sort(this.sortOperators)
+    }
+
+    getSortedOperators() {
+        return this.getOperators().sort(this.sortOperators)
+    }
+
     updateRequest(
         id,
         {
@@ -153,14 +188,12 @@ class LocalDatabase {
         this.checkInit()
 
         if (id) {
-            console.log(`Update request for ${chat_id}`)
-
             let request = this.requests.by('id', id)
 
             request.chat_id = chat_id ?? request.chat_id
-            request.description = description ?? request.description,
-            request.status = status ?? request.status,
-            request.operator = operator ?? request.operator,
+            request.description = description ?? request.description
+            request.status = status ?? request.status
+            request.operator = operator ?? request.operator
 
             this.requests.update(request)
         } else {
@@ -178,6 +211,19 @@ class LocalDatabase {
                 operator,
             })
             console.log(`Insert request for ${chat_id}: ${request}`)
+        }
+    }
+
+    rollbackRequest(id) {
+        this.checkInit()
+
+        if (id) {
+            let request = this.requests.by('id', id)
+
+            request.status = 'NEW'
+            request.operator = undefined
+
+            this.requests.update(request)
         }
     }
 
@@ -212,6 +258,31 @@ class LocalDatabase {
         })
     }
 
+    updateOperatorCount(
+        id,
+        count,
+    ) {
+        let operator = this.operators.by('id', id)
+
+        if (!operator) {
+            throw Error(`Operator with id = '${id}' not found`)
+        }
+        operator.count = count
+        this.operators.update(operator)
+    }
+    
+    updateOperatorChat(
+        user_id,
+        chat_id,
+    ) {
+        let operator = this.operators.by('id', user_id)
+
+        if (operator) {
+            operator.chat_id = chat_id
+            this.operators.update(operator)
+        }
+    }
+
     removeOperator(
         id
     ) {
@@ -241,6 +312,18 @@ class LocalDatabase {
             last_name,
             username,
         })
+    }
+    
+    updateAdminChat(
+        user_id,
+        chat_id,
+    ) {
+        let admin = this.admins.by('id', user_id)
+
+        if (admin) {
+            admin.chat_id = chat_id
+            this.admins.update(admin)
+        }
     }
 
     removeAdmin(

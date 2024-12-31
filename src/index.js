@@ -24,6 +24,15 @@ bot.setWebHook(`${url}/bot${token}`)
 
 const db = new LocalDatabase()
 
+const formatPhoneNumber = (number) => {
+    const cleaned = ('' + phoneNumberString).replace(/\D/g, '')
+    const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{4})$/)
+    if (match) {
+        return '+' + match.join('-')
+    }
+    return null
+}
+
 const interval = setInterval(() => {
     try {
         db.checkInit()
@@ -59,10 +68,11 @@ const interval = setInterval(() => {
         console.log(`Send request '${request.id}' to operator '${operator.username}'`)
         db.updateRequest(request.id, {...request, status: 'IN WORK', operator: operator.id})
         db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
-        const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name} ${contact.first_name}\n${ contact.phone_number }\n${contact.email}\n${contact.username}`
+        const phoneNumber = formatPhoneNumber(contact.phone_number)
+        const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name ?? ''}${contact.first_name}\n+${ phoneNumber }\n${contact.email}\n${contact.username ?? ''}`
         const entities = [
             {
-                type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number.length,
+                type: 'phone_number', offset: message.indexOf(phoneNumber), length: phoneNumber.length,
             }, {
                 type: 'email', offset: message.indexOf(contact.email), length: contact.email.length,
             }
@@ -134,7 +144,7 @@ const reply = (msg, state) => {
             if (msg.contact) {
                 db.updateContact(
                     msg.chat.id,
-                    msg.contact,
+                    {...msg.contact, username: msg.from.username},
                 )
                 return bot.sendMessage(msg.chat.id, 
                     'Теперь введите свою почту.',

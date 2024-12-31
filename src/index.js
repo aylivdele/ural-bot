@@ -266,7 +266,6 @@ bot.on('message', msg => {
             if (!admin.chat_id) {
                 db.updateAdminChat(msg.from.id, msg.chat.id)
             }
-            bot.sendMessage(admin.username, 'Test')
 
             let customMessage = undefined
             if (msg.users_shared?.users?.length) {

@@ -62,14 +62,14 @@ const interval = setInterval(() => {
         const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name} ${contact.first_name}\n${ contact.phone_number }\n${contact.email}\n${contact.username}`
         const entities = [
             {
-                type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number,
+                type: 'phone_number', offset: message.indexOf(contact.phone_number), length: contact.phone_number.length,
             }, {
-                type: 'email', offset: message.indexOf(contact.email), length: contact.email,
+                type: 'email', offset: message.indexOf(contact.email), length: contact.email.length,
             }
         ]
         if (contact.username?.length) {
             entities.push({
-                type: 'mention', offset: message.indexOf(contact.username), length: contact.username,
+                type: 'mention', offset: message.indexOf(contact.username), length: contact.username.length,
             })
         }
         bot.sendMessage(operator.chat_id, message, { entities: entities, reply_markup: {

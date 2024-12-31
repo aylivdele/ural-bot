@@ -217,10 +217,10 @@ const reply = (msg, state) => {
 
 const getAdminKeyboard = (isSuper) => {
     const keyboard = [
-        [
-            {text: 'Список операторов', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
-            {text: 'Список админов', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
-        ],
+        // [
+        //     {text: 'Список операторов', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
+        //     {text: 'Список админов', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
+        // ],
         [
             {text: 'Добавить оператора', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
             {text: 'Убрать оператора', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}

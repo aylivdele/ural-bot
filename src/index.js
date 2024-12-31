@@ -69,8 +69,15 @@ const interval = setInterval(() => {
         db.updateRequest(request.id, {...request, status: 'IN WORK', operator: operator.id})
         db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
         const phoneNumber = formatPhoneNumber(contact.phone_number)
-        const message = `Новый запрос: ${request.description}\nКонтактные данные:\n${contact.last_name ?? ''}${contact.first_name}\n+${ phoneNumber }\n${contact.email}\n${contact.username ?? ''}`
+        const contactStr = 'Контактные данные:'
+        const message = `Новый запрос:\n${request.description}\n${contactStr}\n${contact.last_name ?? ''}${contact.first_name}\n${ phoneNumber }\n${contact.email}\n${contact.username ?? ''}`
         const entities = [
+            {
+                type: 'bold', offset:0, length: 13,
+            },
+            {
+                type: 'bold', offset:message.indexOf(contactStr), length: contactStr.length,
+            },
             {
                 type: 'phone_number', offset: message.indexOf(phoneNumber), length: phoneNumber.length,
             }, {
@@ -192,7 +199,7 @@ const reply = (msg, state) => {
             ).then(() => 4, () => state)
         case 4:
             const requests = db.getRequestsByChatId(msg.chat.id)
-            const countOfOpenRequests = requests.filter(r => r.status !== 'DONE').length
+            const countOfOpenRequests = requests.filter(r => r.status !== 'CLOSED').length
             if (countOfOpenRequests > 0) {
                 if (countOfOpenRequests >= 3) {
                     return bot.sendMessage(msg.chat.id, 

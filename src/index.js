@@ -25,7 +25,7 @@ bot.setWebHook(`${url}/bot${token}`)
 const db = new LocalDatabase()
 
 const formatPhoneNumber = (number) => {
-    const cleaned = ('' + phoneNumberString).replace(/\D/g, '')
+    const cleaned = ('' + number).replace(/\D/g, '')
     const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{4})$/)
     if (match) {
         return '+' + match.join('-')
@@ -85,7 +85,7 @@ const interval = setInterval(() => {
         bot.sendMessage(operator.chat_id, message, { entities: entities, reply_markup: {
             inline_keyboard: [[
                 {
-                    text: 'Закрыть заявку', callback_data: 'closeREQUEST' + request.id,
+                    text: 'Закрыть запрос', callback_data: 'closeREQUEST' + request.id,
                 }
             ]]
         }}).catch(reason => {

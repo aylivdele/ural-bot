@@ -28,7 +28,7 @@ const formatPhoneNumber = (number) => {
     const cleaned = ('' + number).replace(/\D/g, '')
     const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{4})$/)
     if (match) {
-        return '+' + match.join('-')
+        return '+' + match.splice(1).join('-')
     }
     return null
 }

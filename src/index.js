@@ -261,7 +261,7 @@ bot.on('message', msg => {
     
 
     try {
-        const admin = db.getAdmins().find(ad => ad.id = msg.from.id)
+        const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
         if (admin) {
             if (!admin.chat_id) {
                 db.updateAdminChat(msg.from.id, msg.chat.id)

@@ -26,11 +26,11 @@ const db = new LocalDatabase()
 
 const formatPhoneNumber = (number) => {
     const cleaned = ('' + number).replace(/\D/g, '')
-    const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{4})$/)
+    const match = cleaned.match(/^(\d{1,3})(\d{3})(\d{3})(\d{4})$/)
     if (match) {
         return '+' + match.splice(1).join('-')
     }
-    return null
+    return number
 }
 
 const interval = setInterval(() => {
@@ -70,7 +70,7 @@ const interval = setInterval(() => {
         db.updateOperatorCount(operator.id, (operator.count ?? 0) + 1)
         const phoneNumber = formatPhoneNumber(contact.phone_number)
         const contactStr = 'Контактные данные:'
-        const message = `Новый запрос:\n${request.description}\n${contactStr}\n${contact.last_name ?? ''}${contact.first_name}\n${ phoneNumber }\n${contact.email}\n${contact.username ?? ''}`
+        const message = `Новый запрос:\n${request.description}\n${contactStr}\n${contact.last_name ?? ''} ${contact.first_name}\n${ phoneNumber }\n${contact.email}\n${contact.username ?? ''}`
         const entities = [
             {
                 type: 'bold', offset:0, length: 13,
@@ -234,10 +234,6 @@ const reply = (msg, state) => {
 
 const getAdminKeyboard = (isSuper) => {
     const keyboard = [
-        // [
-        //     {text: 'Список операторов', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
-        //     {text: 'Список админов', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
-        // ],
         [
             {text: 'Добавить оператора', request_user: {request_id: 1, user_is_bot: false, request_name: true, request_username: true}},
             {text: 'Убрать оператора', request_user: {request_id: 2, user_is_bot: false, request_name: true, request_username: true}}
@@ -248,7 +244,11 @@ const getAdminKeyboard = (isSuper) => {
             {text: 'Добавить админа', request_user: {request_id: 3, user_is_bot: false, request_name: true, request_username: true}},
             {text: 'Добавить супер админа', request_user: {request_id: 4, user_is_bot: false, request_name: true, request_username: true}},
             {text: 'Убрать админа', request_user: {request_id: 5, user_is_bot: false, request_name: true, request_username: true}}
-        ])
+        ],[
+            {text: 'Список операторов'},
+            {text: 'Список админов'}
+        ]
+        )
     }
     return keyboard
 }
@@ -273,15 +273,72 @@ const handleUserShared = (request_id, user_shared, from) => {
             return 'Администратор удален'
     }
 }
+// first_name,
+// last_name,
+// username,
+// isSuper,
+// adderUsername,
+const getAllAdmins = () => {
+    return db.getAdmins().map(admin => ([admin.last_name ? admin.last_name + ' ': undefined, 
+        admin.username, 
+        admin.isSuper ? 'Супер админ' : undefined,
+    ].filter(str => !!str).join('\n')).join('\n'))
+}
+
+const getAllOperators = () => {
+    return db.getOperators().map(operator => ([operator.last_name ? operator.last_name + ' ': undefined, 
+        operator.username, 
+    ].filter(str => !!str).join('\n')).join('\n'))
+}
 
 bot.on('message', msg => {
-    
-
     try {
+        if (msg.text?.startsWith('/start')) {
+            db.addChat(msg.chat_id, msg.from.user_id)
+        }
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
         if (admin) {
             if (!admin.chat_id) {
                 db.updateAdminChat(msg.from.id, msg.chat.id)
+            }
+
+            if (msg.text === 'Список операторов') {
+                return bot.sendMessage(msg.chat.id, getAllOperators(),
+                {reply_markup: {
+                    keyboard: getAdminKeyboard(admin.isSuper)
+                }})
+            }
+            if (msg.text === 'Список админов') {
+                return bot.sendMessage(msg.chat.id, getAllAdmins(),
+                {reply_markup: {
+                    keyboard: getAdminKeyboard(admin.isSuper)
+                }})
+            }
+            if (msg.text === 'Рассылка') {
+                return bot.sendMessage(msg.chat.id, 'Введите текст рассылки. Для отмены введите "отмена"',
+                {reply_markup: {
+                    force_reply: true,
+                    input_field_placeholder: "Текст рассылки",
+                }})
+            }
+            if (msg.reply_to_message?.text === 'Введите текст рассылки') {
+                if (msg.text && msg.text !== 'отмена') {
+                    return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
+                        reply_markup: {
+                            keyboard: getAdminKeyboard(admin.isSuper)
+                        }})
+                        .then(sent_message => 
+                            Promise.allSettled(
+                                chats.map(chat => bot.sendMessage(chat, msg.text))
+                            ).then(results => {
+                                const countFulfilled = results.filter(result => result.status === 'fulfilled').length
+                                bot.editMessageText(`Успешно отправлено ${countFulfilled} из ${results.length - countFulfilled} пользователям.`,
+                                {
+                                    chat_id: msg.chat.id,
+                                    message_id: sent_message.message_id,
+                                })})
+                        )                    
+                }
             }
 
             let customMessage = undefined
@@ -313,7 +370,6 @@ bot.on('message', msg => {
             .then(newState => db.updateOrInsertChatState(msg.chat.id, newState))
     } catch (error) {
         console.error(error)
-    }
-    
+    }  
 })
 

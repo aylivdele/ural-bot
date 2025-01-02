@@ -26,7 +26,7 @@ class LocalDatabase {
         }
         console.log("Database initializing...")
 
-        
+        this.chats = this.getCollection('chats')
         this.states = this.getCollection('states')
         this.contacts = this.getCollection('contacts')
         this.requests = this.getCollection('requests')
@@ -65,6 +65,21 @@ class LocalDatabase {
         if (!this.initialized) {
             throw Error("Database not yet initialized")
         }
+    }
+
+    addChat(chat_id, user_id) {
+        this.checkInit()
+
+        let chat = this.chats.by('id', user_id)
+        if (!chat) {
+            this.chats.insert({id: user_id, chat_id})
+        }
+    }
+
+    getAllUserChats() {
+        const admins = this.getAdmins().map(admin => admin.id)
+        const operators = this.getOperators().map(operator => operator.id)
+        return this.chats.where(chat => !admins.includes(chat.id) && !operators.includes(chat.id)).map(chat => chat.chat_id)
     }
 
     getChatState(

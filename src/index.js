@@ -325,17 +325,17 @@ bot.on('message', msg => {
             }
             if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
                 if (msg.text && msg.text !== 'отмена') {
-                    return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...')
+                    return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
+                        reply_markup: {
+                            keyboard: getAdminKeyboard(admin.isSuper)
+                        }})
                         .then(sent_message => 
                             Promise.allSettled(
                                 db.getAllUserChats().map(chat => bot.sendMessage(chat, msg.text))
                             ).then(results => {
                                 const countFulfilled = results.filter(result => result.status === 'fulfilled').length
-                                bot.editMessageText(`Успешно отправлено ${countFulfilled} из ${results.length - countFulfilled} пользователям.`,
-                                {
-                                    chat_id: msg.chat.id,
-                                    message_id: sent_message.message_id,
-                                })})
+                                bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length - countFulfilled} пользователям.`)
+                            })
                         )                    
                 }
             }

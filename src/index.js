@@ -295,8 +295,9 @@ const getAllOperators = () => {
 
 bot.on('message', msg => {
     try {
+        console.log(`Processing message with text: "${msg.text}"`)
         if (msg.text?.startsWith('/start')) {
-            db.addChat(msg.chat.id, msg.from.user_id)
+            db.addChat(msg.chat.id, msg.from.id)
         }
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
         if (admin) {

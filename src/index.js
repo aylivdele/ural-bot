@@ -40,11 +40,10 @@ const interval = setInterval(() => {
         console.log('Not initialized')
     }
     let requests = db.getNewRequests()
-    console.log("New requests: " + requests?.toString?.())
     if (!requests?.length) {
-        console.log("No new requests")
         return
     }
+    console.log("New requests: " + JSON.stringify(requests))
     
     let operators = db.getOpenOperators()
     console.log("Open operators: " + operators?.toString?.())
@@ -335,7 +334,7 @@ bot.on('message', msg => {
                                 db.getAllUserChats().map(chat => bot.sendMessage(chat, msg.text))
                             ).then(results => {
                                 const countFulfilled = results.filter(result => result.status === 'fulfilled').length
-                                bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length - countFulfilled} пользователям.`)
+                                bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
                             })
                         )                    
                 }

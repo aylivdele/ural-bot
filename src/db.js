@@ -71,7 +71,6 @@ class LocalDatabase {
         this.checkInit()
 
         let chat = this.chats.by('id', user_id)
-        console.log(`Add chat ${chat_id} for ${user_id}: ${chat}`)
         if (!chat) {
             this.chats.insert({id: user_id, chat_id})
         }

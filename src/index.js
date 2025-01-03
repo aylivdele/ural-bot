@@ -283,14 +283,124 @@ const getAllAdmins = () => {
     return db.getAdmins().map(admin => ([(admin.last_name ? admin.last_name + ' ': '') + admin.first_name, 
         admin.username, 
         admin.isSuper ? 'Супер админ' : undefined,
-    ].filter(str => !!str).join('\n'))).join('\n')
+    ].filter(str => !!str).join('\n'))).join('\n\n')
 }
 
 const getAllOperators = () => {
     return db.getOperators().map(operator => ([(operator.last_name ? operator.last_name + ' ': '') + operator.first_name, 
         operator.username, 
-    ].filter(str => !!str).join('\n'))).join('\n')
+    ].filter(str => !!str).join('\n'))).join('\n\n')
 }
+
+const media_map = {}
+
+const onMedia = (msg, type, file_id) => {
+    if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
+        if (msg.caption !== 'отмена') {
+            if (msg.media_group_id) {
+                bot.sendMessage(msg.chat.id, 'Обнаружено группа медиа файлов. Ожидаю их получения в течении минуты и начинаю рассылку.')
+                let media_group = media_map[msg.media_group_id]
+                if (media_group) {
+                    media_group.media.push({
+                        type: type,
+                        media: file_id,
+                        caption: msg.caption,
+                        caption_entities: msg.caption_entities, 
+                    })
+                    return
+                } else {
+                    media_group = {}
+                    media_map[msg.media_group_id] = media_group
+                    media_group.timeout = setTimeout(() => {
+                            bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
+                                reply_markup: {
+                                    keyboard: getAdminKeyboard(admin.isSuper)
+                                }})
+                                .then(sent_message => 
+                                    Promise.allSettled(
+                                        db.getAllUserChats().map(chat => bot.sendMediaGroup(chat, media_group.media))
+                                    ).then(results => {
+                                        const countFulfilled = results.filter(result => result.status === 'fulfilled').length
+                                        bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
+                                    })
+                                ) 
+                        }, 60000)
+                    media_group.media = [{
+                        type: type,
+                        media: file_id,
+                        caption: msg.caption,
+                        caption_entities: msg.caption_entities, 
+                    }]
+                    return
+                }
+            } else {
+                return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
+                    reply_markup: {
+                        keyboard: getAdminKeyboard(admin.isSuper)
+                    }})
+                    .then(sent_message => 
+                        Promise.allSettled(
+                            db.getAllUserChats().map(chat => {
+                                switch (type) {
+                                    case 'photo':
+                                        return bot.sendPhoto(chat, file_id,{caption: msg.caption, caption_entities: msg.caption_entities})
+                                    case 'video':
+                                        return bot.sendVideo(chat, file_id,{caption: msg.caption, caption_entities: msg.caption_entities})
+                                    case 'audio':
+                                        return bot.sendAudio(chat, file_id,{caption: msg.caption, caption_entities: msg.caption_entities})
+                                    default:
+                                        return Promise.reject('Unsupported media type') 
+                                }
+                            })
+                        ).then(results => {
+                            const countFulfilled = results.filter(result => result.status === 'fulfilled').length
+                            bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
+                        })
+                    ) 
+            }
+        }
+        return                    
+    } else {
+
+    }
+}
+
+
+bot.on('photo', msg => {
+    try {
+        console.log(`Processing photo with text: "${msg.caption}"`)
+        const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
+        if (admin) {
+            onMedia(msg, 'photo', msg.photo[0].file_id)
+        }
+    } catch(e) {
+        console.error(e)
+    }
+})
+
+bot.on('video', msg => {
+    try {
+        console.log(`Processing vedio with text: "${msg.caption}"`)
+        const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
+        if (admin) {
+            onMedia(msg, 'video', msg.video.file_id)
+        }
+    } catch(e) {
+        console.error(e)
+    }
+})
+
+bot.on('audio', msg => {
+    try {
+        console.log(`Processing audio with text: "${msg.caption}"`)
+        const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
+        if (admin) {
+            onMedia(msg, 'audio', msg.audio.file_id)
+        }
+    } catch(e) {
+        console.error(e)
+    }
+})
 
 bot.on('message', msg => {
     try {

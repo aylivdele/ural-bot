@@ -281,14 +281,14 @@ const handleUserShared = (request_id, user_shared, from) => {
 // isSuper,
 // adderUsername,
 const getAllAdmins = () => {
-    return db.getAdmins().map(admin => ([admin.last_name ? admin.last_name + ' ': undefined, 
+    return db.getAdmins().map(admin => ([(admin.last_name ? admin.last_name + ' ': '') + admin.first_name, 
         admin.username, 
         admin.isSuper ? 'Супер админ' : undefined,
     ].filter(str => !!str).join('\n'))).join('\n')
 }
 
 const getAllOperators = () => {
-    return db.getOperators().map(operator => ([operator.last_name ? operator.last_name + ' ': undefined, 
+    return db.getOperators().map(operator => ([(operator.last_name ? operator.last_name + ' ': '') + operator.first_name, 
         operator.username, 
     ].filter(str => !!str).join('\n'))).join('\n')
 }
@@ -331,7 +331,7 @@ bot.on('message', msg => {
                         }})
                         .then(sent_message => 
                             Promise.allSettled(
-                                chats.map(chat => bot.sendMessage(chat, msg.text))
+                                db.getAllUserChats().map(chat => bot.sendMessage(chat, msg.text))
                             ).then(results => {
                                 const countFulfilled = results.filter(result => result.status === 'fulfilled').length
                                 bot.editMessageText(`Успешно отправлено ${countFulfilled} из ${results.length - countFulfilled} пользователям.`,

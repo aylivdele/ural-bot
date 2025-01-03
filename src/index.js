@@ -323,6 +323,7 @@ const onMedia = (msg, type, file_id, admin) => {
                                         db.getAllUserChats().map(chat => bot.sendMediaGroup(chat, media_group.media))
                                     ).then(results => {
                                         const countFulfilled = results.filter(result => result.status === 'fulfilled').length
+                                        media_map[msg.media_group_id] = undefined
                                         bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
                                     })
                                 ) 
@@ -450,7 +451,7 @@ bot.on('message', msg => {
                                 db.getAllUserChats().map(chat => bot.sendMessage(chat, msg.text))
                             ).then(results => {
                                 const countFulfilled = results.filter(result => result.status === 'fulfilled').length
-                                bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
+                                return bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
                             })
                         )                    
                 }

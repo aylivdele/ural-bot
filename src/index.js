@@ -325,10 +325,7 @@ bot.on('message', msg => {
             }
             if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
                 if (msg.text && msg.text !== 'отмена') {
-                    return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
-                        reply_markup: {
-                            keyboard: getAdminKeyboard(admin.isSuper)
-                        }})
+                    return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...')
                         .then(sent_message => 
                             Promise.allSettled(
                                 db.getAllUserChats().map(chat => bot.sendMessage(chat, msg.text))
@@ -347,7 +344,7 @@ bot.on('message', msg => {
             if (msg.users_shared?.users?.length) {
                 customMessage = handleUserShared(msg.users_shared.request_id, msg.users_shared.users[0], msg.from.username)
             }
-            return bot.sendMessage(msg.chat.id, customMessage ?? 'Меню администратора',
+            return bot.sendMessage(msg.chat.id, customMessage ?? 'Выберите команду из меню кнопок',
                 {reply_markup: {
                     keyboard: getAdminKeyboard(admin.isSuper)
                 }}

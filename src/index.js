@@ -247,6 +247,8 @@ const getAdminKeyboard = (isSuper) => {
         ],[
             {text: 'Список операторов'},
             {text: 'Список админов'}
+        ],[
+            {text: 'Рассылка'}
         ]
         )
     }
@@ -282,13 +284,13 @@ const getAllAdmins = () => {
     return db.getAdmins().map(admin => ([admin.last_name ? admin.last_name + ' ': undefined, 
         admin.username, 
         admin.isSuper ? 'Супер админ' : undefined,
-    ].filter(str => !!str).join('\n')).join('\n'))
+    ].filter(str => !!str).join('\n'))).join('\n')
 }
 
 const getAllOperators = () => {
     return db.getOperators().map(operator => ([operator.last_name ? operator.last_name + ' ': undefined, 
         operator.username, 
-    ].filter(str => !!str).join('\n')).join('\n'))
+    ].filter(str => !!str).join('\n'))).join('\n')
 }
 
 bot.on('message', msg => {
@@ -321,7 +323,7 @@ bot.on('message', msg => {
                     input_field_placeholder: "Текст рассылки",
                 }})
             }
-            if (msg.reply_to_message?.text === 'Введите текст рассылки') {
+            if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
                 if (msg.text && msg.text !== 'отмена') {
                     return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
                         reply_markup: {

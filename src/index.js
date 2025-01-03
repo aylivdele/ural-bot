@@ -294,11 +294,10 @@ const getAllOperators = () => {
 
 const media_map = {}
 
-const onMedia = (msg, type, file_id) => {
+const onMedia = (msg, type, file_id, admin) => {
     if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
         if (msg.caption !== 'отмена') {
             if (msg.media_group_id) {
-                bot.sendMessage(msg.chat.id, 'Обнаружено группа медиа файлов. Ожидаю их получения в течении минуты и начинаю рассылку.')
                 let media_group = media_map[msg.media_group_id]
                 if (media_group) {
                     media_group.media.push({
@@ -309,8 +308,11 @@ const onMedia = (msg, type, file_id) => {
                     })
                     return
                 } else {
+
                     media_group = {}
                     media_map[msg.media_group_id] = media_group
+                    bot.sendMessage(msg.chat.id, 'Обнаружено группа медиа файлов. Ожидаю их получения и начинаю рассылку.')
+
                     media_group.timeout = setTimeout(() => {
                             bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
                                 reply_markup: {
@@ -324,7 +326,7 @@ const onMedia = (msg, type, file_id) => {
                                         bot.sendMessage(msg.chat.id, `Успешно отправлено ${countFulfilled} из ${results.length} пользователям.`)
                                     })
                                 ) 
-                        }, 60000)
+                        }, 10000)
                     media_group.media = [{
                         type: type,
                         media: file_id,
@@ -370,8 +372,8 @@ bot.on('photo', msg => {
     try {
         console.log(`Processing photo with text: "${msg.caption}"`)
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
-        if (admin) {
-            onMedia(msg, 'photo', msg.photo[0].file_id)
+        if (admin && msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
+            onMedia(msg, 'photo', msg.photo[0].file_id, admin)
         }
     } catch(e) {
         console.error(e)
@@ -382,8 +384,8 @@ bot.on('video', msg => {
     try {
         console.log(`Processing vedio with text: "${msg.caption}"`)
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
-        if (admin) {
-            onMedia(msg, 'video', msg.video.file_id)
+        if (admin && msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
+            onMedia(msg, 'video', msg.video.file_id, admin)
         }
     } catch(e) {
         console.error(e)
@@ -394,8 +396,8 @@ bot.on('audio', msg => {
     try {
         console.log(`Processing audio with text: "${msg.caption}"`)
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
-        if (admin) {
-            onMedia(msg, 'audio', msg.audio.file_id)
+        if (admin && msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
+            onMedia(msg, 'audio', msg.audio.file_id, admin)
         }
     } catch(e) {
         console.error(e)
@@ -434,6 +436,10 @@ bot.on('message', msg => {
                 }})
             }
             if (msg.reply_to_message?.text === 'Введите текст рассылки. Для отмены введите "отмена"') {
+                
+                if (msg.audio || msg.video || msg.photo) {
+                    return
+                }
                 if (msg.text && msg.text !== 'отмена') {
                     return bot.sendMessage(msg.chat.id, 'Рассылка в процессе...', {
                         reply_markup: {

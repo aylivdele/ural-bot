@@ -139,7 +139,7 @@ const reply = (msg, state) => {
     switch (state) {
         case 0:
             return bot.sendMessage(msg.chat.id, 
-                `Здравствуйте! Для того, чтобы оставить заявку, нужно предоставить номер телефона и почту.`,
+                `Для того, чтобы оставить заявку, нужно предоставить номер телефона и почту.`,
                 {reply_markup: {
                     keyboard: [[{request_contact: true, text: 'Передать номер'}]],
                     is_persistent: true,
@@ -410,6 +410,8 @@ bot.on('message', msg => {
         console.log(`Processing message with text: "${msg.text}"`)
         if (msg.text?.startsWith('/start')) {
             db.addChat(msg.chat.id, msg.from.id)
+            bot.sendMessage(msg.chat.id, 
+                `Здравствуйте, ${ msg.from.first_name }!\nМы очень рады что вы выбрали компанию УралИндуктор.\nЧтобы оставить заявку следуйте инструкциям!`)
         }
         const admin = db.getAdmins().find(ad => ad.id === msg.from.id)
         if (admin) {
